@@ -1,5 +1,8 @@
 import numpy as np
+from sympy import symbols, expand, Matrix
+import sympy as sp
 import matplotlib.pyplot as plt
+from scipy.linalg import solve
 from vpython import *
 
 def dados_simul():
@@ -24,6 +27,79 @@ def dados_simul():
         [0,1/m2,0],
         [0,0,1/m3]
     ])
+
+    open_loop_poles = np.roots(np.poly(A))
+
+    print("Polos de malha aberta:")
+    print(open_loop_poles)
+    print('\n')
+
+    plt.scatter(open_loop_poles.real, open_loop_poles.imag, marker='x', color='red')
+    plt.axhline(y=0, color='black', linestyle='--')
+    plt.axvline(x=0, color='black', linestyle='--')
+    plt.xlabel('Parte Real')
+    plt.ylabel('Parte Imaginária')
+    plt.title('Polos de Malha Aberta')
+    plt.grid(True)
+    plt.show()
+
+ 
+    # Desse comentario até a marcação ta tudo um caos, mas é a parte de adicionar o controlador, se comentar roda sem controle tranquilo.
+    # ele até roda mas aqui pra mim ele fica muito tempo no cálculo do determinante, dai n sei se ta errado ou se meu pc é ruim mesmo
+    
+    # Calcula os polos da malha aberta
+    poles, _ = np.linalg.eig(A)
+
+    # Mova os polos 2 unidades para a esquerda
+    shifted_poles = poles - 2
+    print("Polos desejados:")
+    print(shifted_poles)
+    print('\n')
+
+
+    # Variáveis simbólicas
+    s = symbols('s')
+
+    # Constrói o polinômio característico com os polos desejados
+    char_poly = expand((s-shifted_poles[0])*(s-shifted_poles[1])*(s-shifted_poles[2])*(s-shifted_poles[3])*(s-shifted_poles[4])*(s-shifted_poles[5]))
+
+    print("Polinômio característico:")
+    print(char_poly)
+    print('\n')
+    print(Matrix(A))
+    print('\n')
+    print(Matrix(B))
+    print('\n')
+    print(Matrix(symbols('k1:19')).reshape(3,6))
+    print('\n')
+    print(Matrix(s * np.eye(6)))
+    print('\n')
+
+    # Construindo a matriz sI - A + BK
+    print((np.dot(B,Matrix(symbols('k1:19')).reshape(3,6))))
+    
+    sI_minus_A_plus_BK = sp.collect(sp.Matrix(s*np.identity(6)-A+np.dot(B,Matrix(symbols('k1:19')).reshape(3,6))).det(),s)
+
+
+    print("sI - A + BK:")
+    print(sI_minus_A_plus_BK)
+    print('\n')
+
+    # Encontrando a matriz K que iguala o determinante ao polinômio característico
+    char_poly = sI_minus_A_plus_BK.det()
+    print("Determinante de sI - A + BK:")
+    print(char_poly)
+    print('\n')
+    K_solution = solve(char_poly, symbols('k1:19'))
+
+    print("Matriz K:")
+    for key, value in K_solution.items():
+        print(key, "=", value)
+
+    C = np.array([1,0,0,0,0,0])
+
+
+    # --------------------------------------------------------------//------------------------------------------------------------------
 
     t0, tf, dt = 0, 20, 0.01
     x0, u0 = np.array([[3], [5], [8], [0], [0], [0]]), np.vstack(np.zeros(B.shape[1]))

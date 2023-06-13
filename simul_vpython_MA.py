@@ -1,5 +1,5 @@
 import numpy as np
-from sympy import symbols, expand, Matrix
+from sympy import symbols, expand, Matrix, Symbol
 import sympy as sp
 import matplotlib.pyplot as plt
 from scipy.linalg import solve
@@ -51,7 +51,7 @@ def dados_simul():
     poles, _ = np.linalg.eig(A)
 
     # Mova os polos 2 unidades para a esquerda
-    shifted_poles = poles - 2
+    shifted_poles = [-2 for x in range(0,6)]
     print("Polos desejados:")
     print(shifted_poles)
     print('\n')
@@ -77,21 +77,24 @@ def dados_simul():
 
     # Construindo a matriz sI - A + BK
     print((np.dot(B,Matrix(symbols('k1:19')).reshape(3,6))))
+ 
+    A = np.asarray(A, dtype=float)
+    B = np.asarray(B, dtype=float)
     
-    sI_minus_A_plus_BK = sp.collect(sp.Matrix(s*np.identity(6)-A+np.dot(B,Matrix(symbols('k1:19')).reshape(3,6))).det(),s)
+    sI_minus_A_plus_BK = sp.collect(sp.Matrix(s*np.identity(6)-A+np.dot(B,Matrix(symbols('k1:19')).reshape(3,6))).det('berkowitz'),s)
 
 
-    print("sI - A + BK:")
-    print(sI_minus_A_plus_BK)
+    simplified_expression = sp.collect(sp.simplify(sI_minus_A_plus_BK),s)
+    print('simplify: ')
+    print(simplified_expression)
     print('\n')
 
-    # Encontrando a matriz K que iguala o determinante ao polinômio característico
-    char_poly = sI_minus_A_plus_BK.det()
-    print("Determinante de sI - A + BK:")
-    print(char_poly)
-    print('\n')
-    K_solution = solve(char_poly, symbols('k1:19'))
 
+    # resolvido até aqui
+    
+    x = Symbol('x')
+    K_solution = solve(x**2 - 1, x)
+    print(K_solution)
     print("Matriz K:")
     for key, value in K_solution.items():
         print(key, "=", value)

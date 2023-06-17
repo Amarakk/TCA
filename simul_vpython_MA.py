@@ -20,13 +20,18 @@ def dados_simul():
         [0, k3/m3, -k3/m3, 0, b3/m3, -b3/m3]
     ])
     B = np.array([
-        [0,0,0],
-        [0,0,0],
-        [0,0,0],
-        [1/m1,0,0],
-        [0,1/m2,0],
-        [0,0,1/m3]
+        [0],
+        [0],
+        [0],
+        [1/m1],
+        [0],
+        [0]
     ])
+    t0, tf, dt = 0, 20, .01
+    x0, u0 = np.array([[0.5],[1],[1.5],[0],[0],[0]]), np.vstack(np.zeros(B.shape[1]))
+
+    T, X, U = t, x, u = t0, x0, u0
+
 
     open_loop_poles = np.roots(np.poly(A))
 
@@ -70,53 +75,51 @@ def dados_simul():
     print('\n')
     print(Matrix(B))
     print('\n')
-    print(Matrix(symbols('k1:19')).reshape(3,6))
+    print(Matrix(symbols('k1:7')).reshape(1,6))
     print('\n')
     print(Matrix(s * np.eye(6)))
     print('\n')
 
     # Construindo a matriz sI - A + BK
-    print((np.dot(B,Matrix(symbols('k1:19')).reshape(3,6))))
+    print((np.dot(B,Matrix(symbols('k1:7')).reshape(1,6))))
  
     A = np.asarray(A, dtype=float)
     B = np.asarray(B, dtype=float)
-    
-    sI_minus_A_plus_BK = sp.collect(sp.Matrix(s*np.identity(6)-A+np.dot(B,Matrix(symbols('k1:19')).reshape(3,6))).det('berkowitz'),s)
 
 
-    simplified_expression = sp.collect(sp.simplify(sI_minus_A_plus_BK),s)
-    print('simplify: ')
-    print(simplified_expression)
+
+    k1,k2,k3,k4,k5,k6 = sp.symbols(['k1','k2','k3','k4','k5','k6'])
+    K=[[k1,k2,k3,k4,k5,k6]]
+
     print('\n')
+    print(sp.Matrix(s*np.identity(6)-A+np.dot(B,K)))
+    print('\n')
+    print(sp.collect(sp.Matrix(s*np.identity(6)-A+np.dot(B,K)).det(),s))
+    print('\n')
+    # 
 
-
-    # resolvido até aqui
-    
-    x = Symbol('x')
-    K_solution = solve(x**2 - 1, x)
-    print(K_solution)
-    print("Matriz K:")
-    for key, value in K_solution.items():
-        print(key, "=", value)
+    K =  np.array([[32.075,0,0,10.4,0,0]])
 
     C = np.array([1,0,0,0,0,0])
+
+    # (100*k1+40*s^6+40*k4*s^5+64*s^5+40*k1*s^4+24*k4*s^4+865*s^4+24*k1*s^3+241*k4*s^3+621*s^3+241*k1*s^2+20*k4*s^2+3735*s^2+20*k1*s+100*k4*s+400*s+1500)/40
+
+    #  https://matrixcalc.org/pt/det.html#determinant-Gauss%28%7B%7Bs,0,0,-1,0,0%7D,%7B0,s,0,0,-1,0%7D,%7B0,0,s,0,0,-1%7D,%7Ba+15,b-5,c,d+s+1,f-0%2e5,g%7D,%7B0,5,-2%2e5,0,s+0%2e5,-0%2e25%7D,%7B0,-1,1,0,-0%2e1,s+0%2e1%7D%7D%29
 
 
     # --------------------------------------------------------------//------------------------------------------------------------------
 
-    t0, tf, dt = 0, 20, 0.01
-    x0, u0 = np.array([[3], [5], [8], [0], [0], [0]]), np.vstack(np.zeros(B.shape[1]))
-
-    T, X, U = t, x, u = t0, x0, u0
-
     for i in range(int((tf-t)/dt)):
         # u = (N@r-K@x_est)
         t, x = t + dt, x + dx(x,u,dt)
+        u = (-K@x)
         # y, y_est = C@x, C@x_est
         # x_est = x_est + dx_est(x_est,u,dt) # estimação do estado
-        X, U, T = np.append(X,x,axis=1), np.append(U,u,axis=1), np.append(T,t)
-    
-    f1, f2, f3 = U[0], U[0], U[0]
+        X, U, T = np.append(X,x,axis=1), np.append(U,u), np.append(T,t)
+
+
+
+    f1, f2, f3 = U[0], U[0]*0, U[0]*0
 
     return T, X, f1, f2, f3
 

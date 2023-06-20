@@ -4,13 +4,14 @@ import sympy as sp
 import matplotlib.pyplot as plt
 from scipy.linalg import solve
 from vpython import *
+import math
 
 def dados_simul():
     RK4 = lambda f : lambda x, u, dt :(lambda dx1:(lambda dx2:(lambda dx3:(lambda dx4:(dx1+2*dx2+2*dx3+dx4)/6)(dt*f(x+dx3,u)))(dt*f(x+dx2/2,u)))(dt*f(x+dx1/2,u)))(dt*f(x,u))
     dx = RK4(lambda x, u: A@x + B@u)
     dx_est = RK4(lambda x_est, u: A@x_est + B@u + L@(y-y_est))
     
-    m1=1.0; m2=2.0; m3=5.0; k1=10.0; k2=5.0; k3=5.0; b1=0.5; b2=0.5; b3=0.5
+    m1=1.0; m2=1.0; m3=1.0; k1=5.0; k2=5.0; k3=5.0; b1=0.5; b2=0.5; b3=0.5
     A = np.array([
         [0,0,0,1,0,0],
         [0,0,0,0,1,0],
@@ -23,8 +24,8 @@ def dados_simul():
         [0],
         [0],
         [0],
-        [1/m1],
         [0],
+        [1/m2],
         [0]
     ])
     t0, tf, dt = 0, 20, .01
@@ -98,9 +99,30 @@ def dados_simul():
     print('\n')
     # 
 
-    K =  np.array([[32.075,0,0,10.4,0,0]])
 
-    C = np.array([1,0,0,0,0,0])
+
+    kMatrix = Matrix([
+        [0, 0, 0, 0, 1, 0, 9.5],
+        [0, 1, 0, 0.5, 1.5, 0.5, 33.25],
+        [0.5, 1.5, 0.5, 5.25, 15.5, 5.5, 124.75],
+        [5.25, 15.5, 5.5, 5, 10, 10, 57.5],
+        [5, 10, 10, 25, 50, 50, 117],
+        [25, 50, 50, 0, 0, 0, -186],
+        ]).rref()
+
+    print(kMatrix)
+    print('\n')
+    K =  np.array([[(-41256)/625, 13259/625, 5044/625, 2484/625, 19/2,(-5252)/625]])
+
+    # K = [x[-1] for x in kMatrix[0]]
+    # K = np.array([[round(x,4) for x in kMatrix[0].col(-1)]])
+    # print(K1)
+    print(K)
+    print('\n')
+
+    
+
+    C = np.array([0,1,0,0,0,0])
 
     # (100*k1+40*s^6+40*k4*s^5+64*s^5+40*k1*s^4+24*k4*s^4+865*s^4+24*k1*s^3+241*k4*s^3+621*s^3+241*k1*s^2+20*k4*s^2+3735*s^2+20*k1*s+100*k4*s+400*s+1500)/40
 
@@ -115,12 +137,10 @@ def dados_simul():
         u = (-K@x)
         # y, y_est = C@x, C@x_est
         # x_est = x_est + dx_est(x_est,u,dt) # estimação do estado
-        X, U, T = np.append(X,x,axis=1), np.append(U,u), np.append(T,t)
+        X, U, T = np.append(X,x,axis=1), np.append(U,u,axis=1), np.append(T,t)
 
 
-
-    f1, f2, f3 = U[0], U[0]*0, U[0]*0
-
+    f1, f2, f3 = U[0]*0, U[0], U[0]*0
     return T, X, f1, f2, f3
 
 def imprime():
@@ -198,6 +218,7 @@ def move():
         gf3.plot(T[i], f3[i])
 
 T, X, f1, f2, f3 = dados_simul()
+print(f1, f2, f3)
 imprime()
 forca1, forca2, forca3, mola1, mola2, mola3, massa1, massa2, massa3, gx1, gx2, gx3, gf1, gf2, gf3, gv1, gv2, gv3, tam_cubo, tam_mola = inicializa()
 move()

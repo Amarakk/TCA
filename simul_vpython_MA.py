@@ -28,11 +28,14 @@ def dados_simul():
         [1/m2],
         [0]
     ])
-    t0, tf, dt = 0, 20, .01
+    C = np.array([[1,0,0,0,0,0]])
+
+    D = np.array([[0]])
+    
+    t0, tf, dt, u, x, r = 0, 10, .01, np.array([[0]]), np.array([[0.5],[1],[1.5],[0],[0],[0]]), np.array([[.5]]) 
     x0, u0 = np.array([[0.5],[1],[1.5],[0],[0],[0]]), np.vstack(np.zeros(B.shape[1]))
 
     T, X, U = t, x, u = t0, x0, u0
-
 
     open_loop_poles = np.roots(np.poly(A))
 
@@ -50,9 +53,7 @@ def dados_simul():
     plt.show()
 
  
-    # Desse comentario até a marcação ta tudo um caos, mas é a parte de adicionar o controlador, se comentar roda sem controle tranquilo.
-    # ele até roda mas aqui pra mim ele fica muito tempo no cálculo do determinante, dai n sei se ta errado ou se meu pc é ruim mesmo
-    
+
     # Calcula os polos da malha aberta
     poles, _ = np.linalg.eig(A)
 
@@ -61,7 +62,10 @@ def dados_simul():
     print("Polos desejados:")
     print(shifted_poles)
     print('\n')
-
+    estimator_poles = [-6 for x in range(0,6)]
+    print("Polos do estimador:")
+    print(estimator_poles)
+    print('\n')
 
     # Variáveis simbólicas
     s = symbols('s')
@@ -72,17 +76,12 @@ def dados_simul():
     print("Polinômio característico:")
     print(char_poly)
     print('\n')
-    print(Matrix(A))
-    print('\n')
-    print(Matrix(B))
-    print('\n')
-    print(Matrix(symbols('k1:7')).reshape(1,6))
-    print('\n')
-    print(Matrix(s * np.eye(6)))
+    
+    print("Polinômio característico (estimador):")
+    print(expand((s-estimator_poles[0])*(s-estimator_poles[1])*(s-estimator_poles[2])*(s-estimator_poles[3])*(s-estimator_poles[4])*(s-estimator_poles[5])))
     print('\n')
 
     # Construindo a matriz sI - A + BK
-    print((np.dot(B,Matrix(symbols('k1:7')).reshape(1,6))))
  
     A = np.asarray(A, dtype=float)
     B = np.asarray(B, dtype=float)
@@ -92,51 +91,76 @@ def dados_simul():
     k1,k2,k3,k4,k5,k6 = sp.symbols(['k1','k2','k3','k4','k5','k6'])
     K=[[k1,k2,k3,k4,k5,k6]]
 
-    print('\n')
-    print(sp.Matrix(s*np.identity(6)-A+np.dot(B,K)))
-    print('\n')
-    print(sp.collect(sp.Matrix(s*np.identity(6)-A+np.dot(B,K)).det(),s))
-    print('\n')
-    # 
+    l1,l2,l3,l4,l5,l6 = sp.symbols(['l1','l2','l3','l4','l5','l6'])
+    L=[[l1],[l2],[l3],[l4],[l5],[l6]]
+
+   
+    # print(sp.collect(sp.Matrix(s*np.identity(6)-A+np.dot(B,K)).det(),s))
+    # print('\n')
+
+    # print(sp.collect(sp.Matrix(s*np.identity(6)-A+np.dot(L,C)).det(),s))
+    # print('\n')
+
+
+    # # 
 
 
 
-    kMatrix = Matrix([
-        [0, 0, 0, 0, 1, 0, 9.5],
-        [0, 1, 0, 0.5, 1.5, 0.5, 33.25],
-        [0.5, 1.5, 0.5, 5.25, 15.5, 5.5, 124.75],
-        [5.25, 15.5, 5.5, 5, 10, 10, 57.5],
-        [5, 10, 10, 25, 50, 50, 117],
-        [25, 50, 50, 0, 0, 0, -186],
-        ]).rref()
+    # kMatrix = Matrix([
+    #     [0, 0, 0, 0, 1, 0, 9.5],
+    #     [0, 1, 0, 0.5, 1.5, 0.5, 33.25],
+    #     [0.5, 1.5, 0.5, 5.25, 15.5, 5.5, 124.75],
+    #     [5.25, 15.5, 5.5, 5, 10, 10, 57.5],
+    #     [5, 10, 10, 25, 50, 50, 117],
+    #     [25, 50, 50, 0, 0, 0, -186],
+    #     ]).rref()
 
-    print(kMatrix)
-    print('\n')
+    # lMatrix = Matrix([
+    #     [1, 0, 0, 0, 0, 0, 36-2.5],
+    #     [2.5, 0, 0, 1, 0, 0, 540-26.75],
+    #     [16.175, 5, 0, 1.5, 0.5, 0, 4320-35.25],
+    #     [20.25, 2.5, 2.5, 15.25, 5.25, 0.25, 19440-182.5],
+    #     [30, 25, 25, 5, 5, 5, 46656-75],
+    #     [25, 0, 0, 25, 25, 25, 46656-250],
+    #     ]).rref()
+
+    # print(lMatrix)
+
     K =  np.array([[(-41256)/625, 13259/625, 5044/625, 2484/625, 19/2,(-5252)/625]])
+
+    L = np.array([[33.49], [459.03], [999.45], [429.5], [1606.942],[-273.7]])
 
     # K = [x[-1] for x in kMatrix[0]]
     # K = np.array([[round(x,4) for x in kMatrix[0].col(-1)]])
     # print(K1)
-    print(K)
-    print('\n')
-
+    # L = [x[-1] for x in lMatrix[0]]
+    # L = np.array([[round(x,4) for x in lMatrix[0].col(-1)]])
     
 
-    C = np.array([0,1,0,0,0,0])
+    AB = np.concatenate([A,B],axis=1)
+    
+    CD = np.concatenate([C,D],axis=1)
+  
+    ABCD = np.concatenate([AB,CD])
 
-    # (100*k1+40*s^6+40*k4*s^5+64*s^5+40*k1*s^4+24*k4*s^4+865*s^4+24*k1*s^3+241*k4*s^3+621*s^3+241*k1*s^2+20*k4*s^2+3735*s^2+20*k1*s+100*k4*s+400*s+1500)/40
-
-    #  https://matrixcalc.org/pt/det.html#determinant-Gauss%28%7B%7Bs,0,0,-1,0,0%7D,%7B0,s,0,0,-1,0%7D,%7B0,0,s,0,0,-1%7D,%7Ba+15,b-5,c,d+s+1,f-0%2e5,g%7D,%7B0,5,-2%2e5,0,s+0%2e5,-0%2e25%7D,%7B0,-1,1,0,-0%2e1,s+0%2e1%7D%7D%29
-
-
+    # print(np.linalg.inv(ABCD)) obtido Nu e Nx
+    # print('\n')
+    Nu = 5
+    
+    Nx = np.array([[0.5],[1],[1],[0],[0],[0]])
+ 
+    N = Nu + K@Nx
+    print(N)
+    x_est = np.array([[0],[0],[0],[0],[0],[0]])
+    X_est = x_est
     # --------------------------------------------------------------//------------------------------------------------------------------
 
     for i in range(int((tf-t)/dt)):
-        # u = (N@r-K@x_est)
+        u = (N@r-K@x_est)   # estimador olhando x1
+        # u = (N@r-K@x) sem estimador olhando x2
         t, x = t + dt, x + dx(x,u,dt)
-        u = (-K@x)
-        # y, y_est = C@x, C@x_est
-        # x_est = x_est + dx_est(x_est,u,dt) # estimação do estado
+        y, y_est = C@x, C@x_est
+        x_est = x_est + dx_est(x_est,u,dt) # estimação do estado
         X, U, T = np.append(X,x,axis=1), np.append(U,u,axis=1), np.append(T,t)
 
 
@@ -218,7 +242,6 @@ def move():
         gf3.plot(T[i], f3[i])
 
 T, X, f1, f2, f3 = dados_simul()
-print(f1, f2, f3)
 imprime()
 forca1, forca2, forca3, mola1, mola2, mola3, massa1, massa2, massa3, gx1, gx2, gx3, gf1, gf2, gf3, gv1, gv2, gv3, tam_cubo, tam_mola = inicializa()
 move()
